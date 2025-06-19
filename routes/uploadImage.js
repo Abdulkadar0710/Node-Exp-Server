@@ -8,8 +8,8 @@ router.post('/', async (req, res) => {
     console.log('Request Body:', req.body);
 
 
-  const PUBLIC_STORE_DOMAIN = req.shopify.PUBLIC_STORE_DOMAIN || 'abdul-gwl.myshopify.com';
-  const PRIVATE_STOREFRONT_API_TOKEN = req.shopify.PRIVATE_STOREFRONT_API_TOKEN || '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';
+  const PUBLIC_STORE_DOMAIN = req.shopify.PUBLIC_STORE_DOMAIN;
+  const PRIVATE_STOREFRONT_API_TOKEN = req.shopify.PRIVATE_STOREFRONT_API_TOKEN;
 
 //   const imageUrl = "https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=620&auto=format&fit=crop&q=60&ixlib=rb-4.1.0";
 
@@ -118,7 +118,7 @@ console.log('xlink:href URLs:', xlinkUrls);
         ]
       };
       
-      const updateResponse = await fetch('https://abdul-gwl.myshopify.com/admin/api/2024-04/graphql.json', {
+      const updateResponse = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/graphql.json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

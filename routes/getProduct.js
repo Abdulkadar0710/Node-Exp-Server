@@ -3,8 +3,8 @@ const router = express.Router();
 const app = express();
 
 router.get('/', async (req, res) => {
-  const PUBLIC_STORE_DOMAIN = 'abdul-gwl.myshopify.com';
-  const PRIVATE_STOREFRONT_API_TOKEN = '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';
+  const PUBLIC_STORE_DOMAIN = req.shopify.PUBLIC_STORE_DOMAIN;
+  const PRIVATE_STOREFRONT_API_TOKEN = req.shopify.PRIVATE_STOREFRONT_API_TOKEN;
   const productId = req.body.id || '8649197551844'; // Default to a specific product ID if not provided
   try {
     const response = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/products/${productId}.json`, {

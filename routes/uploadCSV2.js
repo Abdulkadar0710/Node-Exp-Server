@@ -7,8 +7,9 @@ const router = express.Router();
 const upload = multer({ dest: 'uploads/' }); // Specify the directory to store uploaded files
 
 router.post('/', upload.single('csv'), async (req, res) => {
-    const PUBLIC_STORE_DOMAIN = req.shopify.PUBLIC_STORE_DOMAIN || 'abdul-gwl.myshopify.com';
-    const PRIVATE_STOREFRONT_API_TOKEN = req.shopify.PRIVATE_STOREFRONT_API_TOKEN || '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';
+  console.log("json: ",req.shopify);
+    const PUBLIC_STORE_DOMAIN = req.shopify.PUBLIC_STORE_DOMAIN;
+    const PRIVATE_STOREFRONT_API_TOKEN = req.shopify.PRIVATE_STOREFRONT_API_TOKEN;
     try {
         const filePath = req.file.path; // Path to the uploaded file
         const results = [];
@@ -123,7 +124,7 @@ router.post('/', upload.single('csv'), async (req, res) => {
                     ]
                   };
                   
-                  const updateResponse = await fetch(`https://${ PUBLIC_STORE_DOMAIN }/admin/api/2024-04/graphql.json`, {
+                  const updateResponse = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/graphql.json`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -159,6 +160,7 @@ router.post('/', upload.single('csv'), async (req, res) => {
 
 
     } catch (error) {
+      console.error('Error processing CSV:', error);
         return res.status(500).json({ message: 'Server error', error });
     }
 });
