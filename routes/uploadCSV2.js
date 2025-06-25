@@ -62,12 +62,47 @@ router.post('/', upload.single('csv'), async (req, res) => {
                     }
 
                     const imageTagRegex = /<image\b[^>]*?xlink:href=['"][^'"]*['"][^>]*?>\s*<\/image>|<image\b[^>]*?xlink:href=['"][^'"]*['"][^>]*?\/?>/gi;
-                    const cleanedSvg = value.replace(imageTagRegex, '');
+                    const scriptTagRegex = /<script\b[^>]*?\/?>/gi;
+                    const cleanedSvg = value.replace(imageTagRegex, '').replace(scriptTagRegex, '');
  
-                  console.log('xlink:href URLs:', xlinkUrls); 
+                  console.log('xlink:href URLs:', xlinkUrls);
                 //   console.log('Cleaned SVG:', cleanedSvg);
 
+                  // Fetch existing images for the product
+                  const existingImagesResponse = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/products/${productId}/images.json`, {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-Shopify-Access-Token': PRIVATE_STOREFRONT_API_TOKEN,
+                    },
+                  });
 
+                  if (!existingImagesResponse.ok) {
+                    throw new Error(`Error fetching existing images: ${existingImagesResponse.statusText}`);
+                  }
+
+                  const existingImagesData = await existingImagesResponse.json();
+                  const existingImages = existingImagesData.images;
+
+                  // Delete each existing image
+                  for (const image of existingImages) {
+                    const deleteImageResponse = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/products/${productId}/images/${image.id}.json`, {
+                      method: 'DELETE',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'X-Shopify-Access-Token': PRIVATE_STOREFRONT_API_TOKEN,
+                      },
+                    });
+
+                    if (!deleteImageResponse.ok) {
+                      console.error(`Error deleting image with ID ${image.id}: ${deleteImageResponse.statusText}`);
+                    } else {
+                      console.log(`Deleted image with ID ${image.id}`);
+                    }
+                  }
+
+
+                 // Add new Image to the product  
                   const res = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/products/${productId}/images.json`, {
                     method: 'POST',
                     headers: {
@@ -156,41 +191,72 @@ router.post('/', upload.single('csv'), async (req, res) => {
                 return res.status(500).json({ message: 'Error processing CSV file', error });
             });
 
-        return res.status(200).json({ message: 'CSV processed successfully'});
+        return res.status(200).json({ message: 'CSV processed successfully', 
+          success: true
+        });
 
 
     } catch (error) {
       console.error('Error processing CSV:', error);
         return res.status(500).json({ message: 'Server error', error });
     }
-});
+}); 
 
 
-async function getProductIdBySKU(sku, PUBLIC_STORE_DOMAIN, PRIVATE_STOREFRONT_API_TOKEN) {
-    try {
-        const response = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-01/products.json`, {
-            method: 'GET',
-            headers: {
-                'X-Shopify-Access-Token': PRIVATE_STOREFRONT_API_TOKEN,
-                'Content-Type': 'application/json',
-            },
-        });
-
-        const data = await response.json();
-
-        for (const product of data.products) {
-            for (const variant of product.variants) {
-                if (variant.sku === sku) {
-                    return product.id;
-                }
+async function getProductIdBySKU(sku, PUBLIC_STORE_DOMAIN, ADMIN_API_ACCESS_TOKEN) {
+  const query = `
+    query getProductBySKU($sku: String!) {
+      productVariants(first: 1, query: $sku) {
+        edges {
+          node {
+            id
+            sku
+            product {
+              id
+              title
             }
+          }
         }
-        return null;
-    } catch (err) {
-        console.error(`Error fetching product by SKU: ${sku}`, err);
-        return null;
+      }
     }
+  `;
+
+  try {
+    const response = await fetch(`https://${PUBLIC_STORE_DOMAIN}/admin/api/2024-04/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'X-Shopify-Access-Token': ADMIN_API_ACCESS_TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: { sku },
+      }),
+    });
+
+    
+
+    const result = await response.json();
+    const edges = result?.data?.productVariants?.edges;
+
+    
+    if (edges && edges.length > 0) {
+      const id = getNumericId(edges[0].node.product.id);
+      return id;
+    }
+
+    return null;
+  } catch (err) {
+    console.error(`Error fetching product by SKU: ${sku}`, err);
+    return null;
+  }
 }
+
+function getNumericId(gid) {
+  const parts = gid.split('/');
+  return parts[parts.length - 1];
+}
+
 
 
 export default router; 

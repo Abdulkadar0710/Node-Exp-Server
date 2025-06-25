@@ -20,7 +20,7 @@ router.post('/', upload.single('csv'), async (req, res) => {
             .on('data', (data) => {
 
                 results.push(data)
-            })
+            }) 
             .on('end', async () => {
 
                 for (const row of results) {

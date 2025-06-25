@@ -21,7 +21,8 @@ router.post('/', async (req, res) => {
                                 node {
                                     id
                                     tags
-                                }
+                                } 
+                                    '
                             }
                             pageInfo {
                                 hasNextPage

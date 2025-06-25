@@ -5,6 +5,7 @@ import getProduct from './routes/getProduct.js';
 import uploadImage from './routes/uploadImage.js';
 import uploadCSV from './routes/uploadCSV.js';
 import deleteCol from './routes/deleteCol.js';
+import getFolder from './routes/getFolder.js';
 import  env from 'dotenv';
 env.config();
 
@@ -16,7 +17,14 @@ console.log(PUBLIC_STORE_DOMAIN, PRIVATE_STOREFRONT_API_TOKEN);
 
 import uploadCSV2 from './routes/uploadCSV2.js';
 import uploadImage2 from './routes/uploadImage2.js';   
-
+import cors from 'cors';
+app.use(cors(
+  {
+    origin: '*', // Allow all origins, you can specify a specific origin if needed
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  } 
+)); 
 
 app.use(express.json());
 
@@ -24,7 +32,7 @@ app.use((req, res, next) => {
     req.shopify = {
        PUBLIC_STORE_DOMAIN,
        PRIVATE_STOREFRONT_API_TOKEN
-    };
+    }; 
     // req.pid = id;
     next();
   });
@@ -39,6 +47,7 @@ app.use('/api', getProduct);
 app.use('/api/uploadCSV2', uploadCSV2);
 app.use('/api/uploadImage2', uploadImage2);
 app.use('/api/deleteCol', deleteCol);
+app.use('/api/getFolder', getFolder);
 
   
 const PORT = 5000;
